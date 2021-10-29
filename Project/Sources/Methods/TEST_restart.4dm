@@ -5,14 +5,11 @@ TEST passing of user params to On Startup
 
 */
 
-$project:=File:C1566(Get 4D folder:C485(Database folder:K5:14)+\
-"Projects"+Folder separator:K24:12+\
-"stub"+Folder separator:K24:12+"Project"+Folder separator:K24:12+\
-"stub.4DProject"; fk platform path:K87:2)
+$project:="Project/librezept.4DProject"
 
 $userParams:=New object:C1471
 
-$userParams.project:=$project.path
+$userParams.project:=$project
 $userParams.options:=New object:C1471
 $userParams.options.targets:=New collection:C1472("x86_64_generic"; "arm64_macOS_lib")
 $userParams.options.typeInference:="locals"
@@ -22,7 +19,11 @@ $userParams.options.generateSymbols:=True:C214
 $userParams.options.generateTypingMethods:="reset"
 $userParams.options.components:=New collection:C1472
 
+$app:=cs:C1710.App.new()
+
 $userParam:=$app.encodeObject($userParams)
+
+SET TEXT TO PASTEBOARD:C523($userParam)
 
 SET DATABASE PARAMETER:C642(User param value:K37:94; $userParam)
 

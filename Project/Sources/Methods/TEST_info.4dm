@@ -1,4 +1,6 @@
 //%attributes = {"invisible":true}
+//SHOW ON DISK(Temporary folder)
+
 $credentials:=New object:C1471
 $credentials.username:="keisuke.miyako@4d.com"  //apple ID
 $credentials.password:="@keychain:altool"  //app specific password or keychain label; must be literal to use listProviders()

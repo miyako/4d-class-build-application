@@ -26,9 +26,18 @@ If ($userParamsJson#"")
 	
 	If ($userParams#Null:C1517)
 		
-		If ($userParams.project#Null:C1517)
+		If (Value type:C1509($userParams.project)=Is text:K8:3)
 			
-			$project:=File:C1566($userParams.project)
+			var $folder : 4D:C1709.Folder
+			
+			Case of 
+				: (Is macOS:C1572)
+					$folder:=Folder:C1567(Application file:C491; fk platform path:K87:2).parent
+				: (Is Windows:C1573)
+					$folder:=File:C1566(Application file:C491; fk platform path:K87:2).parent
+			End case 
+			
+			$project:=File:C1566($folder.path+$userParams.project)
 			
 			If ($project.exists)
 				If ($userParams.options#Null:C1517)
@@ -45,11 +54,9 @@ If ($userParamsJson#"")
 				
 				$console.printErrors($status)
 				
+				QUIT 4D:C291
+				
 			End if 
 		End if 
 	End if 
-End if 
-
-If (Application type:C494=4D Desktop:K5:4)
-	QUIT 4D:C291
 End if 
