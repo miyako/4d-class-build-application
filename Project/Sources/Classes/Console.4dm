@@ -32,11 +32,17 @@ Function printErrors($status : Object)
 Function print($error : Object)
 	
 	var $relativePath : Text
-	$relativePath:=Replace string:C233(File:C1566($error.code.file.platformPath; fk platform path:K87:2).path; This:C1470.project.parent.path; ""; 1; *)
+	
+	If ($error.code#Null:C1517)
+		$relativePath:=Replace string:C233(File:C1566($error.code.file.platformPath; fk platform path:K87:2).path; This:C1470.project.parent.path; ""; 1; *)
+		$file:="file="+String:C10($relativePath)+",line="+String:C10($error.lineInFile)
+	Else 
+		$file:=""
+	End if 
 	
 	If (Bool:C1537($error.isError))
-		This:C1470.printError("::"+" file="+String:C10($relativePath)+",line="+String:C10($error.lineInFile)+"::"+String:C10($error.message))
+		This:C1470.printError("::"+$file+"::"+String:C10($error.message))
 	Else 
-		This:C1470.printWarning("::"+" file="+String:C10($relativePath)+",line="+String:C10($error.lineInFile)+"::"+String:C10($error.message))
+		This:C1470.printWarning("::"+$file+"::"+String:C10($error.message))
 	End if 
 	
