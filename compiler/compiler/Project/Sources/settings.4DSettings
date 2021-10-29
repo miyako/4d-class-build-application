@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><preferences stamp="5">
+	<com.4d>
+		<compiler>
+			<options target="all"/>
+			<typage default_for_button="2" default_for_numeric="1"/>
+		</compiler>
+		<server>
+			<network>
+				<options publication_name="compiler"/>
+			</network>
+		</server>
+		<general startup_environnement="1"/>
+		<interface>
+			<user splash_screen="false"/>
+		</interface>
+	</com.4d>
+</preferences>
