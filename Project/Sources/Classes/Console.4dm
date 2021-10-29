@@ -31,9 +31,9 @@ Function printErrors($status : Object)
 	
 Function printStatus($success : Boolean)
 	
-	$console.printInformation("::group::Compile project")
-	$console.printInformation("::project="+This:C1470.project.path+",success="+String:C10($success)+"::")
-	$console.printInformation("::endgroup::")
+	This:C1470.printInformation("::group::Compile project")
+	This:C1470.printInformation("::project="+This:C1470.project.path+",success="+String:C10($success)+"::")
+	This:C1470.printInformation("::endgroup::")
 	
 Function print($error : Object)
 	
