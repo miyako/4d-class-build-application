@@ -52,6 +52,8 @@ If ($userParamsJson#"")
 				
 				$console:=cs:C1710.Console.new($project)
 				
+				$console.printStatus($status.success)
+				
 				$console.printErrors($status)
 				
 				QUIT 4D:C291

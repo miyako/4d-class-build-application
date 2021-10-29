@@ -19,7 +19,7 @@ Function printErrors($status : Object)
 	If ($status#Null:C1517)
 		If ($status.errors#Null:C1517)
 			If ($status.errors.length>0)
-				This:C1470.printInformation("::group::Compilation errors")
+				This:C1470.printInformation("::group::Compile project (errors)")
 				var $error : Object
 				For each ($error; $status.errors)
 					This:C1470.print($error)
@@ -28,6 +28,12 @@ Function printErrors($status : Object)
 			End if 
 		End if 
 	End if 
+	
+Function printStatus($success : Boolean)
+	
+	$console.printInformation("::group::Compile project")
+	$console.printInformation("::project="+This:C1470.project.path+",success="+String:C10($success)+"::")
+	$console.printInformation("::endgroup::")
 	
 Function print($error : Object)
 	
