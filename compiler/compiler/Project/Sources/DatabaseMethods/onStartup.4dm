@@ -50,6 +50,6 @@ If ($userParamsJson#"")
 	End if 
 End if 
 
-If (Application type:C494=4D Volume desktop:K5:2)
+If (Application type:C494=4D Desktop:K5:4)
 	QUIT 4D:C291
 End if 
