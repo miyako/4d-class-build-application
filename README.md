@@ -16,6 +16,11 @@ Example workflow [here](https://github.com/4D-JP/librezept/blob/main/.github/wor
 
 c.f. [Learn GitHub Actions](https://docs.github.com/en/actions/learn-github-actions)
 
+Thanks to GitHub Actions, one can...
+
+* Edit a 4D project (method, class, form, etc.) online and compile for macOS including Apple Silicon
+* Edit a 4D project on Windos and compile for macOS including Apple Silicon
+
 ### Points of Interest
 
 ```yml
