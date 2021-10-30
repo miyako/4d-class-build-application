@@ -8,7 +8,26 @@ Classes to build, sign, archive, notarise and staple an app.
 * [BuildApp](https://github.com/miyako/4d-class-build-application/blob/main/compiler/compiler/Documentation/Classes/BuildApp.md)
 * [SignApp](https://github.com/miyako/4d-class-build-application/blob/main/compiler/compiler/Documentation/Classes/SignApp.md)
 
-The project itself is a generic compiler application. See [On Startup](https://github.com/miyako/4d-class-build-application/blob/main/compiler/compiler/Project/Sources/DatabaseMethods/onStartup.4dm). The project accepts JSON user parameters in base64 encoded format. See last part of [TEST_build](https://github.com/miyako/4d-class-build-application/blob/main/compiler/compiler/Project/Sources/Methods/TEST_build.4dm).
+The project itself is a generic compiler application. See [On Startup](https://github.com/miyako/4d-class-build-application/blob/main/compiler/compiler/Project/Sources/DatabaseMethods/onStartup.4dm). 
+
+## Usage with GitHub Actions
+
+Example workflow [here](https://github.com/4D-JP/librezept/blob/main/.github/workflows/compile.yml).
+
+c.f. [Learn GitHub Actions](https://docs.github.com/en/actions/learn-github-actions)
+
+### Points of Interest
+
+```yml
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'Project/*'
+``` 
+
+[`push`](https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows#push) event on `main` branch triggers the workflow. Limit to contents of the `Project` folder. Remember to quote the path since the forward slash is a metacharacter.
+
 
 ## Build Application
 
