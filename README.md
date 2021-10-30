@@ -21,7 +21,10 @@ Thanks to GitHub Actions, one can...
 * Edit a 4D project (method, class, form, etc.) online and compile for macOS including Apple Silicon
 * Edit a 4D project on Windows and compile for macOS including Apple Silicon
 
-**TODO**: Build with GitHub Actions (`.4DZ` or merged applications)
+**TODO**: 
+
+* Build `.4DZ` component with GitHub Actions
+* Build merged applications with GitHub Actions
 
 ### Points of Interest
 
