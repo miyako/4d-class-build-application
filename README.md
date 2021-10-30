@@ -125,3 +125,8 @@ If ($status.success)
 	$status:=$signApp.notarize($status.file)
 End if 
 ```
+
+## Credits for Inspiration
+
+* [Vanessa Talbot](https://blog.4d.com/how-to-take-advantage-of-github-action-with-4d/)
+* [Eric Marchand](https://github.com/mesopelagique/build-action)
