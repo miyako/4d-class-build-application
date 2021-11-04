@@ -775,6 +775,7 @@ https://developer.apple.com/documentation/security/hardened_runtime_entitlements
 */
 	
 	$entitlements:=New object:C1471
+	$entitlements["com.apple.security.smartcard"]:=True:C214
 	$entitlements["com.apple.security.automation.apple-events"]:=True:C214
 	$entitlements["com.apple.security.cs.allow-dyld-environment-variables"]:=True:C214
 	$entitlements["com.apple.security.cs.allow-jit"]:=True:C214
