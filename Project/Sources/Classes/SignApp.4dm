@@ -161,6 +161,8 @@ Function sign($app : 4D:C1709.Folder)->$statuses : Collection
 							End if 
 						End if 
 						
+						This:C1470._signBin($app; $statuses)
+						
 						This:C1470._signApp($app; $statuses)
 						
 					End if 
@@ -635,6 +637,21 @@ Function _signPHP($app : 4D:C1709.Folder; $statuses : Collection)->$this : cs:C1
 	
 	If ($file.exists)
 		$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+	End if 
+	
+Function _signBin($app : 4D:C1709.Folder; $statuses : Collection)->$this : cs:C1710.SignApp
+	
+	$this:=This:C1470
+	
+	var $file : 4D:C1709.File
+	var $folder : 4D:C1709.Folder
+	
+	$folder:=$app.folder("Contents").folder("Resources").folder("bin")
+	
+	If ($folder.exists)
+		For each ($file; $folder.files(fk recursive:K87:7 | fk ignore invisible:K87:22))
+			$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+		End for each 
 	End if 
 	
 Function _signHelpers($app : 4D:C1709.Folder; $statuses : Collection)->$this : cs:C1710.SignApp
