@@ -5,9 +5,9 @@ $credentials.password:="@keychain:altool"  //app specific password or keychain l
 
 $signApp:=cs:C1710.SignApp.new($credentials)
 
-$app:=Folder:C1567("Macintosh HD:Users:miyako:Documents:miyako@github.com:4d-class-build-application:272594:4D.app"; fk platform path:K87:2)
+$app:=Folder:C1567("Macintosh HD:Applications:BugBase Client.app:"; fk platform path:K87:2)
 
-$statusus:=$signApp.sign($app)
+$statuses:=$signApp.sign($app)
 
 $status:=$signApp.archive($app)
 
