@@ -1374,6 +1374,8 @@ Function setXcodePath($Xcode : 4D:C1709.Folder)->$this : cs:C1710.SignApp
 	$this:=This:C1470
 	
 	Case of 
+		: (Count parameters:C259=0)
+			This:C1470.ENVIRONMENT.DEVELOPER_DIR:=Null:C1517
 		: ($Xcode=Null:C1517)
 			This:C1470.ENVIRONMENT.DEVELOPER_DIR:=Null:C1517
 		: (OB Instance of:C1731($Xcode; 4D:C1709.Folder))

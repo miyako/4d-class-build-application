@@ -11,6 +11,49 @@ Class constructor($settingsFile : Object)
 	
 	This:C1470.settings:=This:C1470._getSettings(This:C1470.settingsFile)
 	
+Function findLicenses($licenseTypes : Collection)->$this : cs:C1710.BuildApp
+	
+	$this:=This:C1470
+	
+	var $build : Integer
+	var $version; $prefix : Text
+	
+	$version:=Application version:C493($build)
+	
+	If (Substring:C12($version; 3; 1)#"0")
+		$prefix:="R-"
+	Else 
+		$prefix:=""
+	End if 
+	
+	$params:=New object:C1471("parameters"; New object:C1471)
+	$params.parameters.licenseTypes:=New collection:C1472
+	$params.parameters.license4D:=".license4D"
+	$versionCode:=Substring:C12($version; 1; 2)+"0"
+	For each ($licenseType; $licenseTypes)
+		$params.parameters.licenseTypes.push($prefix+$licenseType+$versionCode+"@")
+	End for each 
+	
+	var $files : Collection
+	var $file : Object
+	
+	$files:=Folder:C1567(fk licenses folder:K87:16).files(fk ignore invisible:K87:22).query("name in :licenseTypes and  extension == :license4D"; $params)
+	
+	Case of 
+		: (Is macOS:C1572)
+			
+			For each ($file; $files)
+				This:C1470.settings.Licenses.ArrayLicenseMac.Item.push(Get 4D folder:C485(Licenses folder:K5:11)+$file.name+$file.extension)
+			End for each 
+			
+		: (Is Windows:C1573)
+			
+			For each ($file; $files)
+				This:C1470.settings.Licenses.ArrayLicenseWin.Item.push(Get 4D folder:C485(Licenses folder:K5:11)+$file.name+$file.extension)
+			End for each 
+			
+	End case 
+	
 Function getPlatformDestinationFolder()->$folder : 4D:C1709.Folder
 	
 	If (This:C1470.settings#Null:C1517)
