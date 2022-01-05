@@ -1,4 +1,4 @@
-![version](https://img.shields.io/badge/version-19%2B-4371C6)
+![version](https://img.shields.io/badge/version-19%2B-5682DF)
 [![license](https://img.shields.io/github/license/miyako/4d-class-build-application
 )](LICENSE)
 
