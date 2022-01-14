@@ -1,5 +1,5 @@
 //%attributes = {"invisible":true}
-//SHOW ON DISK(Temporary folder)
+SHOW ON DISK:C922(Temporary folder:C486)
 
 $credentials:=New object:C1471
 $credentials.username:="keisuke.miyako@4d.com"  //apple ID

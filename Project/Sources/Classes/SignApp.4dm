@@ -1,4 +1,4 @@
-Class constructor($credentials : Object)
+Class constructor($credentials : Object; $plist : Object)
 	
 	If ($credentials#Null:C1517)
 		
@@ -42,6 +42,10 @@ unused option:local (don't use timestamp server)
 		
 		This:C1470.entitlements:=New object:C1471  //empty object: default entitlements
 		This:C1470.plist:=New object:C1471  //empty object: use current plist (no change)
+		
+		If ($plist#Null:C1517)
+			This:C1470.plist:=$plist
+		End if 
 		
 		This:C1470.options:=New object:C1471
 		
@@ -1074,11 +1078,9 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 	
 	$keys:=This:C1470._copyDefaultProperties()
 	
-	If (This:C1470.plist#Null:C1517)
-		For each ($key; This:C1470.plist)
-			$keys[$key]:=This:C1470.plist[$key]
-		End for each 
-	End if 
+	For each ($key; This:C1470.plist)
+		$keys[$key]:=This:C1470.plist[$key]
+	End for each 
 	
 	$entitlements:=This:C1470._copyDefaultEntitlements()
 	
@@ -1317,8 +1319,16 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 						Else 
 							$value:=DOM Create XML element:C865($dict; "false")
 						End if 
+					: (Value type:C1509($keys[$key])=Is collection:K8:32)
+						var $keyValues : Collection
+						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
+						$array:=DOM Create XML element:C865($dict; "array")
+						$keyValues:=$keys[$key]
+						For each ($keyValue; $keyValues)
+							DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($array; "string"); $keyValue)
+						End for each 
 					Else 
-						//dict, array, etc.
+						//dict, etc.
 				End case 
 			End for each 
 			
@@ -1332,7 +1342,7 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 				
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($infoPlistFile.name+$infoPlistFile.extension); $stdIn; $stdOut; $stdErr; $pid)
+				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($infoPlistFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
 				
 				If (Not:C34(Bool:C1537($options.remove)))
 					//modification to info.plist makes the signature invalid
@@ -1354,7 +1364,7 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 		End if 
 	End if 
 	
-Function _clean($app : Object)->$this : cs:C1710.SignApp
+Function _clean($app : 4D:C1709.Folder)->$this : cs:C1710.SignApp
 	
 	$this:=This:C1470
 	
@@ -1362,10 +1372,14 @@ Function _clean($app : Object)->$this : cs:C1710.SignApp
 		
 		var $stdIn; $stdOut; $stdErr : Blob
 		
+		var $CURRENT_DIRECTORY : Text
+		
+		$CURRENT_DIRECTORY:=$app.platformPath
+		
 		//recursively remove extended attributes in case of --remove-signature
-		SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $app.platformPath)
+		SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $CURRENT_DIRECTORY)
 		SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-		LAUNCH EXTERNAL PROCESS:C811("xattr -cr ."; $stdIn; $stdOut; $stdErr; $pid)
+		LAUNCH EXTERNAL PROCESS:C811("xattr -cr ."; $stdIn; $stdOut; $stdErr)
 		
 	End if 
 	
