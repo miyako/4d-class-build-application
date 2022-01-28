@@ -5,7 +5,11 @@ $credentials.password:="@keychain:altool"  //app specific password or keychain l
 
 $signApp:=cs:C1710.SignApp.new($credentials)
 
-$app:=Folder:C1567("Macintosh HD:Users:miyako:Desktop:Final Application:TEST.app:"; fk platform path:K87:2)
+$version:=Application version:C493($build)
+$folderName:="4D v"+Substring:C12($version; 1; 2)+"."+Substring:C12($version; 4; 1)
+
+$applicationsFolder:=Folder:C1567(fk applications folder:K87:20)
+$app:=$applicationsFolder.folder($folderName).folder("4D.app")
 
 $statuses:=$signApp.sign($app)
 
