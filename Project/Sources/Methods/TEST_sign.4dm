@@ -7,9 +7,11 @@ $signApp:=cs:C1710.SignApp.new($credentials)
 
 $version:=Application version:C493($build)
 $folderName:="4D v"+Substring:C12($version; 1; 2)+"."+Substring:C12($version; 4; 1)
+$folderName:="4D v19 R3"
 
 $applicationsFolder:=Folder:C1567(fk applications folder:K87:20)
 $app:=$applicationsFolder.folder($folderName).folder("4D.app")
+//$app:=$applicationsFolder.folder($folderName).folder("4D Server.app")
 
 $statuses:=$signApp.sign($app)
 
