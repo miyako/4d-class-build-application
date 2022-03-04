@@ -5,6 +5,8 @@ Class constructor($credentials : Object; $plist : Object)
 		This:C1470.username:=$credentials.username
 		This:C1470.password:=$credentials.password
 		This:C1470.ascProvider:=$credentials.ascProvider
+		This:C1470.teamId:=$credentials.teamId
+		This:C1470.keychainProfile:=$credentials.keychainProfile
 		
 		This:C1470.archiveFormat:=".dmg"  //.zip, .pkg
 		
@@ -175,37 +177,52 @@ Function sign($app : 4D:C1709.Folder)->$statuses : Collection
 		End if 
 	End if 
 	
-Function notarize($file : 4D:C1709.File)->$status : Object
+Function notarize($file : 4D:C1709.File; $useOldTool : Boolean)->$status : Object
 	
 	$status:=New object:C1471("success"; False:C215; "readyForPublication"; False:C215; "readyForDistribution"; False:C215)
+	
+	var $use_altool : Boolean
+	
+	If (Count parameters:C259>1)
+		$use_altool:=$useOldTool
+	End if 
 	
 	If (Is macOS:C1572)
 		If (OB Instance of:C1731($file; 4D:C1709.File))
 			If ($file.exists)
 				
-				$status:=This:C1470._altool(New object:C1471("file"; $file))
+				If ($use_altool)
+					$status:=This:C1470._altool(New object:C1471("file"; $file))
+				Else 
+					$status:=This:C1470._notarytool(New object:C1471("file"; $file))
+				End if 
 				
 				$gotResult:=False:C215
 				
 				If ($status.success)
-					Repeat 
-						$status:=This:C1470._altool(New object:C1471("RequestUUID"; $status.RequestUUID))
-						If ($status.success) & ($status.LogFileURL#Null:C1517)
-							$gotResult:=True:C214
-							C_TEXT:C284($response)
-							$statusCode:=HTTP Get:C1157($status.LogFileURL; $response)
-							If ($statusCode=200)
-								C_OBJECT:C1216($json)
-								ON ERR CALL:C155("ON_PARSE_ERROR")
-								$json:=JSON Parse:C1218($response; Is object:K8:27)
-								ON ERR CALL:C155("")
-								$status.readyForDistribution:=($json.status="Accepted")
+					
+					If ($use_altool)
+						Repeat 
+							$status:=This:C1470._altool(New object:C1471("RequestUUID"; $status.RequestUUID))
+							If ($status.success) & ($status.LogFileURL#Null:C1517)
+								$gotResult:=True:C214
+								C_TEXT:C284($response)
+								$statusCode:=HTTP Get:C1157($status.LogFileURL; $response)
+								If ($statusCode=200)
+									C_OBJECT:C1216($json)
+									ON ERR CALL:C155("ON_PARSE_ERROR")
+									$json:=JSON Parse:C1218($response; Is object:K8:27)
+									ON ERR CALL:C155("")
+									$status.readyForDistribution:=($json.status="Accepted")
+								End if 
 							End if 
-						End if 
-						If (Not:C34($gotResult))
-							DELAY PROCESS:C323(Current process:C322; 60*60)  //check every minute
-						End if 
-					Until ($gotResult)
+							If (Not:C34($gotResult))
+								DELAY PROCESS:C323(Current process:C322; 60*60)  //check every minute
+							End if 
+						Until ($gotResult)
+					Else 
+						$status.readyForDistribution:=True:C214
+					End if 
 					
 					If ($status.readyForDistribution)
 						$status:=This:C1470._staple($file)
@@ -234,6 +251,54 @@ Function _staple($file : 4D:C1709.File)->$status : Object
 		$status.staple:=Convert to text:C1012($stdOut; "utf-8")
 		$status.success:=($status.staple="@The staple and validate action worked!@")
 		$status.staple:=Split string:C1554($status.staple; "\n"; sk ignore empty strings:K86:1 | sk trim spaces:K86:2)
+	End if 
+	
+Function _notarytool($params : Object)->$status : Object
+	
+	$status:=New object:C1471("success"; False:C215)
+	
+	If (OB Instance of:C1731($params.file; 4D:C1709.File))
+		
+		$command:="xcrun notarytool submit "+escape_param($params.file.path)
+		
+		Case of 
+			: (This:C1470.keychainProfile#Null:C1517)
+				$command:=$command+" --keychain-profile "+This:C1470.keychainProfile+" --wait"
+			: (This:C1470.username#Null:C1517) & (This:C1470.teamId#Null:C1517) & (This:C1470.password#Null:C1517)
+				$command:=$command+" --apple-id \""+This:C1470.username+"\""+" --team-id "+This:C1470.teamId+" --password "+This:C1470.password+" --wait"
+			Else 
+				$command:=""
+		End case 
+		
+		If ($command#"")
+			
+			var $stdIn; $stdOut; $stdErr : Blob
+			var $pid : Integer
+			
+			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
+			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
+			
+			C_TEXT:C284($info)
+			
+			If (BLOB size:C605($stdErr)#0)
+				$info:=Convert to text:C1012($stdErr; "utf-8")
+				$status.info:=Split string:C1554($info; "\n"; sk trim spaces:K86:2 | sk ignore empty strings:K86:1)
+			End if 
+			
+			If (BLOB size:C605($stdOut)#0)
+				$info:=Convert to text:C1012($stdOut; "utf-8")
+				$status.info:=Split string:C1554($info; "\n"; sk trim spaces:K86:2 | sk ignore empty strings:K86:1)
+			End if 
+			
+			If ($status.info.length#0)
+				$statusCode:=$status.info.pop()
+				If ($statusCode="status: Accepted")
+					$status.success:=True:C214
+				End if 
+			End if 
+			
+		End if 
+		
 	End if 
 	
 Function _altool($params : Object)->$status : Object
@@ -1131,7 +1196,7 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 	If (Bool:C1537($options.remove))
 		This:C1470._clean($app)
 		$command:="codesign --remove-signature "+\
-			escape_param($app.name+$app.extension)
+			escape_param($app.fullName)
 	Else 
 		
 		$status:=New object:C1471("success"; False:C215)
@@ -1150,7 +1215,7 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			
 			$command:=$command+" --sign "+\
 				escape_param(This:C1470.signingIdentity)+" "+\
-				escape_param($app.name+$app.extension)
+				escape_param($app.fullName)
 			
 		Else 
 			
@@ -1188,12 +1253,12 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $entitlementsFile.parent.platformPath)
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-			LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($entitlementsFile.name+$entitlementsFile.extension); $stdIn; $stdOut; $stdErr; $pid)
+			LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($entitlementsFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
 			
 			$command:=$command+" --options=runtime --entitlements "+\
 				escape_param($entitlementsFile.path)+" --sign "+\
 				escape_param(This:C1470.signingIdentity)+" "+\
-				escape_param($app.name+$app.extension)
+				escape_param($app.fullName)
 			
 			$status.entitlements:=$entitlements
 			
@@ -1252,13 +1317,13 @@ Function _lowercaseExecutableName($infoPlistFile : 4D:C1709.File; $keys : Object
 				
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($infoPlistFile.name+$infoPlistFile.extension); $stdIn; $stdOut; $stdErr; $pid)
+				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($infoPlistFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
 				
 				If (Not:C34(Bool:C1537($options.remove)))
 					//modification to info.plist makes the signature invalid
 					$command:="codesign --verbose --sign "+\
 						escape_param(This:C1470.signingIdentity)+" "+\
-						escape_param($infoPlistFile.name+$infoPlistFile.extension)
+						escape_param($infoPlistFile.fullName)
 					
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
@@ -1342,13 +1407,14 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 				
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($infoPlistFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
+				$command:="plutil -convert xml1 "+escape_param($infoPlistFile.fullName); 
+				LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 				
 				If (Not:C34(Bool:C1537($options.remove)))
 					//modification to info.plist makes the signature invalid
 					$command:="codesign --verbose --sign "+\
 						escape_param(This:C1470.signingIdentity)+" "+\
-						escape_param($infoPlistFile.name+$infoPlistFile.extension)
+						escape_param($infoPlistFile.fullName)
 					
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")

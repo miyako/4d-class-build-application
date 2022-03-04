@@ -43,13 +43,13 @@ Function findLicenses($licenseTypes : Collection)->$this : cs:C1710.BuildApp
 		: (Is macOS:C1572)
 			
 			For each ($file; $files)
-				This:C1470.settings.Licenses.ArrayLicenseMac.Item.push(Get 4D folder:C485(Licenses folder:K5:11)+$file.name+$file.extension)
+				This:C1470.settings.Licenses.ArrayLicenseMac.Item.push(Get 4D folder:C485(Licenses folder:K5:11)+$file.fullName)
 			End for each 
 			
 		: (Is Windows:C1573)
 			
 			For each ($file; $files)
-				This:C1470.settings.Licenses.ArrayLicenseWin.Item.push(Get 4D folder:C485(Licenses folder:K5:11)+$file.name+$file.extension)
+				This:C1470.settings.Licenses.ArrayLicenseWin.Item.push(Get 4D folder:C485(Licenses folder:K5:11)+$file.fullName)
 			End for each 
 			
 	End case 
