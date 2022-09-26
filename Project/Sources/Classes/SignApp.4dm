@@ -1407,7 +1407,7 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 				
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-				$command:="plutil -convert xml1 "+escape_param($infoPlistFile.fullName); 
+				$command:="plutil -convert xml1 "+escape_param($infoPlistFile.fullName)
 				LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 				
 				If (Not:C34(Bool:C1537($options.remove)))
