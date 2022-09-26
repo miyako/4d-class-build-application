@@ -49,6 +49,10 @@ unused option:local (don't use timestamp server)
 			This:C1470.plist:=$plist
 		End if 
 		
+		If (This:C1470.plist.CFBundleIdentifier#Null:C1517)
+			This:C1470.bundleIdentifier:=This:C1470.plist.CFBundleIdentifier
+		End if 
+		
 		This:C1470.options:=New object:C1471
 		
 		This:C1470.options.signApp:=True:C214
@@ -1247,6 +1251,8 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 		End for each 
 	End if 
 	
+	This:C1470.isSandBox:=Bool:C1537($entitlements["com.apple.security.app-sandbox"])
+	
 	C_LONGINT:C283($i)
 	C_TEXT:C284($keyName)
 	
@@ -1320,37 +1326,38 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			$doctype:=DOM Append XML child node:C1080($dom; XML DOCTYPE:K45:19; "plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"")
 			DOM SET XML ATTRIBUTE:C866($dom; "version"; "1.0")
 			$dict:=DOM Create XML element:C865($dom; "dict")
+			
+			If (This:C1470.isSandBox)
+				If (This:C1470.app.path#$app.path)
+					$entitlements:=New object:C1471
+					$entitlements["com.apple.security.inherit"]:=True:C214
+					$entitlements["com.apple.security.app-sandbox"]:=True:C214
+				End if 
+			End if 
+			
 			For each ($key; $entitlements)
 				
 				Case of 
-					: ($key="com.apple.security.inherit") & ($app.path=This:C1470.app.path)
-					: ($key="com.apple.security.application-groups") & ($app.path#This:C1470.app.path)
-						
+					: (Value type:C1509($entitlements[$key])=Is text:K8:3)
+						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
+						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "string"); $entitlements[$key])
+					: (Value type:C1509($entitlements[$key])=Is boolean:K8:9)
+						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
+						If (Bool:C1537($entitlements[$key]))
+							$value:=DOM Create XML element:C865($dict; "true")
+						Else 
+							$value:=DOM Create XML element:C865($dict; "false")
+						End if 
+					: (Value type:C1509($entitlements[$key])=Is collection:K8:32)
+						var $keyValues : Collection
+						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
+						$array:=DOM Create XML element:C865($dict; "array")
+						$keyValues:=$entitlements[$key]
+						For each ($keyValue; $keyValues)
+							DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($array; "string"); $keyValue)
+						End for each 
 					Else 
-						
-						Case of 
-							: (Value type:C1509($entitlements[$key])=Is text:K8:3)
-								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
-								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "string"); $entitlements[$key])
-							: (Value type:C1509($entitlements[$key])=Is boolean:K8:9)
-								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
-								If (Bool:C1537($entitlements[$key]))
-									$value:=DOM Create XML element:C865($dict; "true")
-								Else 
-									$value:=DOM Create XML element:C865($dict; "false")
-								End if 
-							: (Value type:C1509($entitlements[$key])=Is collection:K8:32)
-								var $keyValues : Collection
-								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
-								$array:=DOM Create XML element:C865($dict; "array")
-								$keyValues:=$entitlements[$key]
-								For each ($keyValue; $keyValues)
-									DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($array; "string"); $keyValue)
-								End for each 
-							Else 
-								//TODO: string, array, dict...
-						End case 
-						
+						//TODO: string, array, dict...
 				End case 
 				
 			End for each 
@@ -1378,9 +1385,6 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 	
 	SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $app.parent.platformPath)
 	SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-	
-	//CLEAR VARIABLE($stdOut)
-	//CLEAR VARIABLE($stdErr)
 	
 	LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 	
@@ -1501,19 +1505,26 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 				End if 
 			End if 
 			
+			$prefix:=""
+			
 			//write keys
 			For each ($key; $keys)
 				Case of 
 					: (Value type:C1509($keys[$key])=Is text:K8:3)
 						If ($key="CFBundleIdentifier")
+							
 							$stringValue:=$originalIdentifier
+							
 							If (Not:C34($isApp))
-								If ($originalIdentifier#($applicationGroup+".@"))
-									$stringValue:=$applicationGroup+"."+$originalIdentifier
+								If (This:C1470.bundleIdentifier#Null:C1517)
+									If ($stringValue#(This:C1470.bundleIdentifier+"@"))
+										$stringValue:=This:C1470.bundleIdentifier+"."+$stringValue
+									End if 
 								End if 
 							Else 
 								$stringValue:=$keys[$key]
 							End if 
+							
 						Else 
 							$stringValue:=$keys[$key]
 						End if 
