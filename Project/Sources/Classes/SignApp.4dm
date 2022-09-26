@@ -1,4 +1,8 @@
+Class extends _App
+
 Class constructor($credentials : Object; $plist : Object)
+	
+	Super:C1705()
 	
 	If ($credentials#Null:C1517)
 		
@@ -7,10 +11,6 @@ Class constructor($credentials : Object; $plist : Object)
 		This:C1470.ascProvider:=$credentials.ascProvider
 		This:C1470.teamId:=$credentials.teamId
 		This:C1470.keychainProfile:=$credentials.keychainProfile
-		
-		This:C1470.archiveFormat:=".dmg"  //.zip, .pkg
-		
-		This:C1470.InstallPath:=""  //fpr .pkg
 		
 		This:C1470.identity:=This:C1470.findIdentity()
 		If (This:C1470.identity.length#0)
@@ -74,6 +74,7 @@ unused option:local (don't use timestamp server)
 		This:C1470.options.removePHP:=False:C215
 		This:C1470.options.movePluginManifest:=False:C215
 		This:C1470.options.removeComponentPlugins:=True:C214
+		This:C1470.options.removeCEF:=False:C215
 		
 /*
 		
@@ -95,6 +96,8 @@ Function sign($app : 4D:C1709.Folder)->$statuses : Collection
 			If ($app.exists)
 				If (This:C1470.signingIdentity#Null:C1517)
 					
+					This:C1470.app:=$app
+					
 					$statuses:=New collection:C1472
 					
 					If (This:C1470.options.signApp)
@@ -109,6 +112,10 @@ Function sign($app : 4D:C1709.Folder)->$statuses : Collection
 						
 						If (This:C1470.options.signHelpers)
 							This:C1470._signHelpers($app; $statuses)
+						End if 
+						
+						If (This:C1470.options.removeCEF)
+							This:C1470._removeCEF($app; $statuses)
 						End if 
 						
 						If (This:C1470.options.signNativeComponents)
@@ -242,7 +249,7 @@ Function _staple($file : 4D:C1709.File)->$status : Object
 	var $pid : Integer
 	
 	SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-	LAUNCH EXTERNAL PROCESS:C811("xcrun stapler staple "+escape_param($file.path); $stdIn; $stdOut; $stdErr; $pid)
+	LAUNCH EXTERNAL PROCESS:C811("xcrun stapler staple "+This:C1470.escape_param($file.path); $stdIn; $stdOut; $stdErr; $pid)
 	
 	If (BLOB size:C605($stdErr)#0)
 		$status.staple:=Convert to text:C1012($stdErr; "utf-8")
@@ -259,7 +266,7 @@ Function _notarytool($params : Object)->$status : Object
 	
 	If (OB Instance of:C1731($params.file; 4D:C1709.File))
 		
-		$command:="xcrun notarytool submit "+escape_param($params.file.path)
+		$command:="xcrun notarytool submit "+This:C1470.escape_param($params.file.path)
 		
 		Case of 
 			: (This:C1470.keychainProfile#Null:C1517)
@@ -310,23 +317,23 @@ Function _altool($params : Object)->$status : Object
 			$status.RequestUUID:=$params.RequestUUID
 			$command:="xcrun altool --notarization-info "+$params.RequestUUID
 		: (OB Instance of:C1731($params.file; 4D:C1709.File))
-			$command:="xcrun altool --notarize-app --file "+escape_param($params.file.path)
+			$command:="xcrun altool --notarize-app --file "+This:C1470.escape_param($params.file.path)
 		Else 
 			$command:=""
 	End case 
 	
 	If ($command#"")
 		If (Value type:C1509(This:C1470.primaryBundleId)=Is text:K8:3)
-			$command:=$command+" --primary-bundle-id "+escape_param(This:C1470.primaryBundleId)
+			$command:=$command+" --primary-bundle-id "+This:C1470.escape_param(This:C1470.primaryBundleId)
 		End if 
 		If (Value type:C1509(This:C1470.ascProvider)=Is text:K8:3)
-			$command:=$command+" --asc-provider "+escape_param(This:C1470.ascProvider)
+			$command:=$command+" --asc-provider "+This:C1470.escape_param(This:C1470.ascProvider)
 		End if 
 		If (Value type:C1509(This:C1470.username)=Is text:K8:3)
-			$command:=$command+" --username "+escape_param(This:C1470.username)
+			$command:=$command+" --username "+This:C1470.escape_param(This:C1470.username)
 		End if 
 		If (Value type:C1509(This:C1470.password)=Is text:K8:3)
-			$command:=$command+" --password "+escape_param(This:C1470.password)
+			$command:=$command+" --password "+This:C1470.escape_param(This:C1470.password)
 		End if 
 		
 		If (This:C1470.ENVIRONMENT.DEVELOPER_DIR#Null:C1517)
@@ -410,7 +417,20 @@ Function notarizationInfo($RequestUUID : Text)->$status : Object
 	
 	$status:=This:C1470._altool(New object:C1471("RequestUUID"; $RequestUUID))
 	
-Function archive($app : 4D:C1709.Folder)->$status : Object
+Function archive($app : 4D:C1709.Folder; $format : Text)->$status : Object
+	
+	var $archiveFormat : Text
+	
+	If (Count parameters:C259>1)
+		Case of 
+			: ($format=".pkg")
+				$archiveFormat:=$format
+			: ($format=".zip")
+				$archiveFormat:=$format
+			Else 
+				$archiveFormat:=".dmg"
+		End case 
+	End if 
 	
 	$status:=New object:C1471("success"; False:C215)
 	
@@ -421,11 +441,11 @@ Function archive($app : 4D:C1709.Folder)->$status : Object
 				$dst:=This:C1470.destination.folder(This:C1470.versionID)
 				
 				Case of 
-					: (This:C1470.archiveFormat=".dmg")
+					: ($archiveFormat=".dmg")
 						
 						$status:=This:C1470.hdiutil($app; $dst)
 						
-					: (This:C1470.archiveFormat=".zip")
+					: ($archiveFormat=".zip")
 						
 						$status:=This:C1470.ditto($app; $dst)
 						
@@ -433,13 +453,19 @@ Function archive($app : 4D:C1709.Folder)->$status : Object
 						
 						$status:=This:C1470.pkgbuild($app; $dst)
 						
+						If ($status.success)
+							
+							$status:=This:C1470.productsign($status.pkg; $dst)
+							
+						End if 
+						
 				End case 
 				
 				var $archive : 4D:C1709.File
 				
 				If ($status.success)
 					
-					$archive:=This:C1470.destination.folder(This:C1470.versionID).file($app.name+This:C1470.archiveFormat)
+					$archive:=This:C1470.destination.folder(This:C1470.versionID).file($app.name+$archiveFormat)
 					
 					If ($archive.exists)
 						$status.file:=$archive
@@ -465,7 +491,7 @@ Function _signDatabase($app : 4D:C1709.Folder; $statuses : Collection)->$this : 
 	
 	If ($folder.exists)
 		For each ($file; $folder.files(fk recursive:K87:7 | fk ignore invisible:K87:22).query("extension in :1"; $extensions))
-			$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+			$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
 		End for each 
 	End if 
 	
@@ -493,6 +519,26 @@ Function _removeComponentPlugins($app : 4D:C1709.Folder; $statuses : Collection)
 		End if 
 	End for each 
 	
+Function _removeCEF($app : 4D:C1709.Folder; $statuses : Collection)->$this : cs:C1710.SignApp
+	
+	$this:=This:C1470
+	
+	var $file : 4D:C1709.File
+	var $folder : 4D:C1709.Folder
+	
+	$folder:=$app.folder("Contents").folder("Native Components").folder("WebViewerCEF.bundle")
+	$folder.delete(Delete with contents:K24:24)
+	
+	$file:=$app.folder("Contents").file("Chromium Embedded Framework.framework")
+	$file.delete()
+	
+/*
+(invalid destination for symbolic link in bundle)
+*/
+	
+	$file:=$app.folder("Contents").folder("Frameworks").file("Chromium Embedded Framework.framework")
+	$file.delete()
+	
 Function _removePHP($app : 4D:C1709.Folder; $statuses : Collection)->$this : cs:C1710.SignApp
 	
 	$this:=This:C1470
@@ -511,6 +557,7 @@ Function _removeSignature($app : 4D:C1709.Folder; $statuses : Collection)->$this
 	var $folder : 4D:C1709.Folder
 	
 	If (This:C1470.options.signApp)
+		
 		$statuses.push(This:C1470.codesign($app; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.REMOVE))
 		
 		If (This:C1470.options.signNativeComponents)
@@ -535,7 +582,7 @@ Function _signComponents($app : 4D:C1709.Folder; $statuses : Collection)->$this 
 	
 	If ($folder.exists)
 		For each ($file; $folder.files(fk recursive:K87:7 | fk ignore invisible:K87:22).query("extension in :1"; $extensions))
-			$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+			$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
 		End for each 
 	End if 
 	
@@ -554,7 +601,7 @@ Function _signNativeComponents($app : 4D:C1709.Folder; $statuses : Collection)->
 		$from:="@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework"
 		$to:="@executable_path/../../../../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework"
 		This:C1470.install_name_tool($file; $from; $to; $statuses)
-		$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+		$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
 	End if 
 	
 	$folder:=$app.folder("Contents").folder("Native Components").folder("WebViewerCEF.bundle").folder("Contents").folder("Frameworks").folder("4D Helper (Plugin).app")
@@ -581,15 +628,19 @@ Function _signNativeComponents($app : 4D:C1709.Folder; $statuses : Collection)->
 		$statuses.push(This:C1470.codesign($folder; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
 	End if 
 	
-	//sign dylibs first
+	//sign dylibs
 	$folder:=$app.folder("Contents").folder("Native Components").folder("WebViewerCEF.bundle").folder("Contents").folder("Frameworks").folder("Chromium Embedded Framework.framework").folder("Libraries")
 	For each ($file; $folder.files(fk recursive:K87:7 | fk ignore invisible:K87:22))
-		$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+		$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
 	End for each 
 	
-	//sign Chromium Embedded Framework next
+	//sign executable
+	$file:=$app.folder("Contents").folder("Native Components").folder("WebViewerCEF.bundle").folder("Contents").folder("Frameworks").folder("Chromium Embedded Framework.framework").file("Chromium Embedded Framework")
+	$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+	
+	//sign these without hardened runtime; use NO_OPTIONS (don't use --deep) or 4D Helper will become invalid
 	$folder:=$app.folder("Contents").folder("Native Components").folder("WebViewerCEF.bundle").folder("Contents").folder("Frameworks").folder("Chromium Embedded Framework.framework")
-	$statuses.push(This:C1470.codesign($folder; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+	$statuses.push(This:C1470.codesign($folder; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.NO_OPTIONS))
 	
 	//sign these without hardened runtime; use NO_OPTIONS (don't use --deep) or 4D Helper will become invalid
 	$folder:=$app.folder("Contents").folder("Native Components")
@@ -853,6 +904,12 @@ Function _copyDefaultProperties()->$keys : Object
 	$keys.NSPhotoLibraryUsageDescription:=""
 	$keys.NSSystemAdministrationUsageDescription:=""
 	
+	$keys.NSDesktopFolderUsageDescription:=""  // optional, but highly recommended
+	$keys.NSDocumentsFolderUsageDescription:=""  // optional, but highly recommended
+	$keys.NSDownloadsFolderUsageDescription:=""  // optional, but highly recommended
+	$keys.NSRemovableVolumesUsageDescription:=""  // optional, but highly recommended
+	$keys.NSNetworkVolumesUsageDescription:=""  // optional, but highly recommended
+	
 Function _copyDefaultEntitlements()->$entitlements : Object
 	
 /*
@@ -915,6 +972,51 @@ Function install_name_tool($src : Object; $from : Text; $to : Text; $statuses : 
 		
 	End if 
 	
+Function productsign($src : 4D:C1709.File; $dst : 4D:C1709.File)->$status : Object
+	
+	$this:=This:C1470
+	
+	$status:=New object:C1471("success"; False:C215)
+	
+	If (Is macOS:C1572)
+		
+		C_TEXT:C284($signingIdentity)
+		If (This:C1470.identity.length#0)
+			$identity:=This:C1470.identity.query("name == :1"; "Developer ID Installer:@")
+			If ($identity.length#0)
+				$signingIdentity:=$identity[0].name
+			End if 
+		End if 
+		
+		$name:=$src.fullName
+		$src:=$src.rename("$"+$name)
+		$dst:=$dst.file($name)
+		
+		$dst.parent.create()
+		
+		var $stdIn; $stdOut; $stdErr : Blob
+		var $pid : Integer
+		
+		$command:="productsign --sign '"+$signingIdentity+"' "+This:C1470.escape_param($src.path)+" "+This:C1470.escape_param($dst.path)
+		
+		SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $src.parent.platformPath)
+		LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
+		
+		If (BLOB size:C605($stdErr)#0)
+			$status.productsign:=Convert to text:C1012($stdErr; "utf-8")
+			$status.productsign:=Split string:C1554($status.productsign; "\n"; sk ignore empty strings:K86:1 | sk trim spaces:K86:2)
+		Else 
+			If (BLOB size:C605($stdOut)#0)
+				$status.productsign:=Convert to text:C1012($stdOut; "utf-8")
+				$status.productsign:=Split string:C1554($status.productsign; "\n"; sk ignore empty strings:K86:1 | sk trim spaces:K86:2)
+			End if 
+			$status.success:=True:C214
+		End if 
+		
+		$src.delete()
+		
+	End if 
+	
 Function pkgbuild($src : Object; $dst : 4D:C1709.File)->$status : Object
 	
 	$this:=This:C1470
@@ -934,21 +1036,10 @@ Function pkgbuild($src : Object; $dst : 4D:C1709.File)->$status : Object
 					$dst:=$dst.parent.file($dst.name+".pkg")
 			End case 
 			
-			C_TEXT:C284($signingIdentity)
-			If (This:C1470.identity.length#0)
-				$identity:=This:C1470.identity.query("name == :1"; "Developer ID Installer:@")
-				If ($identity.length#0)
-					$signingIdentity:=$identity[0].name
-				End if 
-			End if 
-			
-			$installLocation:="/Applications"
-			
-			If (This:C1470.InstallPath#"")
-				$installLocation:=$installLocation+"/"+This:C1470.InstallPath
-			End if 
-			
 			$dst.parent.create()
+			
+			$installLocation:=Folder:C1567(fk applications folder:K87:20)
+			$installLocation:=$installLocation.file($src.fullName)
 			
 			$payloadFolder:=Folder:C1567(Temporary folder:C486; fk platform path:K87:2).folder(Generate UUID:C1066)
 			$payloadFolder.create()
@@ -962,8 +1053,8 @@ Function pkgbuild($src : Object; $dst : 4D:C1709.File)->$status : Object
 			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 			
 			$command:="cp -R "+\
-				escape_param($src.path)+" "+\
-				escape_param($payloadFolder.folder("payload").path)
+				This:C1470.escape_param($src.path)+" "+\
+				This:C1470.escape_param($payloadFolder.folder("payload").path)
 			
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
 			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
@@ -978,11 +1069,13 @@ Function pkgbuild($src : Object; $dst : 4D:C1709.File)->$status : Object
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $payloadFolder.platformPath)
 			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 			
-			$command:="pkgbuild --sign '"+\
-				$signingIdentity+"' --root payload --install-location "+\
-				escape_param($installLocation)+\
-				" --component-plist component.plist "+\
-				escape_param($dst.path)+" --identifier "+This:C1470.primaryBundleId
+			$command:="plutil -replace BundleIsVersionChecked -bool NO component.plist"
+			
+			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $payloadFolder.platformPath)
+			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
+			
+			$command:="pkgbuild --install-location "+This:C1470.escape_param($installLocation.path)+" --root payload --component-plist component.plist "+\
+				This:C1470.escape_param($dst.path)+" --identifier "+This:C1470.primaryBundleId
 			
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $payloadFolder.platformPath)
 			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
@@ -996,6 +1089,7 @@ Function pkgbuild($src : Object; $dst : 4D:C1709.File)->$status : Object
 					$status.pkgbuild:=Split string:C1554($status.pkgbuild; "\n"; sk ignore empty strings:K86:1 | sk trim spaces:K86:2)
 				End if 
 				$status.success:=True:C214
+				$status.pkg:=$dst
 			End if 
 			
 		End if 
@@ -1008,8 +1102,6 @@ Function hdiutil($src : Object; $dst : 4D:C1709.File)->$status : Object
 	$status:=New object:C1471("success"; False:C215)
 	
 	If (Is macOS:C1572)
-		
-		$unzip:=($src.extension=".zip")
 		
 		If (OB Instance of:C1731($src; 4D:C1709.File)) | (OB Instance of:C1731($src; 4D:C1709.Folder))
 			
@@ -1035,8 +1127,8 @@ Function hdiutil($src : Object; $dst : 4D:C1709.File)->$status : Object
 			
 			//better to receive output in xml plist 
 			$command:="hdiutil create -format UDBZ -plist -srcfolder "+\
-				escape_param($src.path)+" "+\
-				escape_param($dst.path)
+				This:C1470.escape_param($src.path)+" "+\
+				This:C1470.escape_param($dst.path)
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
 			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 			
@@ -1100,23 +1192,23 @@ Function ditto($src : Object; $dst : 4D:C1709.File; $noParentFolder : Boolean)->
 			If ($unzip)
 				
 				$command:="ditto -x -k "+\
-					escape_param($src.path)+" "+\
-					escape_param($dst.path)
+					This:C1470.escape_param($src.path)+" "+\
+					This:C1470.escape_param($dst.path)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
 				LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 			Else 
 				
 				If ($noParentFolder)
 					$command:="ditto -c -k "+\
-						escape_param($src.path)+" "+\
-						escape_param($dst.path)
+						This:C1470.escape_param($src.path)+" "+\
+						This:C1470.escape_param($dst.path)
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
 					LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 				Else 
 					//.app is a parent folder so --keepParent
 					$command:="ditto -c -k --keepParent "+\
-						escape_param($src.path)+" "+\
-						escape_param($dst.path)
+						This:C1470.escape_param($src.path)+" "+\
+						This:C1470.escape_param($dst.path)
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
 					LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 				End if 
@@ -1187,8 +1279,8 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			This:C1470._lowercaseExecutableName($infoPlistFile; $keys; $status)
 		End if 
 		
-		If ($infoPlistFile.exists) & ($bundleType="app")
-			This:C1470._updateProperties($infoPlistFile; $keys; $status)
+		If ($infoPlistFile.exists) & (($bundleType="app") | ($bundleType="bundle"))
+			This:C1470._updateProperties($infoPlistFile; $keys; $status; (This:C1470.app.path=$app.path))
 		End if 
 		
 	End if 
@@ -1196,7 +1288,7 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 	If (Bool:C1537($options.remove))
 		This:C1470._clean($app)
 		$command:="codesign --remove-signature "+\
-			escape_param($app.fullName)
+			This:C1470.escape_param($app.fullName)
 	Else 
 		
 		$status:=New object:C1471("success"; False:C215)
@@ -1214,8 +1306,8 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 		If (Not:C34($hardenedRuntime))
 			
 			$command:=$command+" --sign "+\
-				escape_param(This:C1470.signingIdentity)+" "+\
-				escape_param($app.fullName)
+				This:C1470.escape_param(This:C1470.signingIdentity)+" "+\
+				This:C1470.escape_param($app.fullName)
 			
 		Else 
 			
@@ -1229,20 +1321,38 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			DOM SET XML ATTRIBUTE:C866($dom; "version"; "1.0")
 			$dict:=DOM Create XML element:C865($dom; "dict")
 			For each ($key; $entitlements)
+				
 				Case of 
-					: (Value type:C1509($entitlements[$key])=Is text:K8:3)
-						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
-						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "string"); $keys[$key])
-					: (Value type:C1509($entitlements[$key])=Is boolean:K8:9)
-						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
-						If (Bool:C1537($entitlements[$key]))
-							$value:=DOM Create XML element:C865($dict; "true")
-						Else 
-							$value:=DOM Create XML element:C865($dict; "false")
-						End if 
+					: ($key="com.apple.security.inherit") & ($app.path=This:C1470.app.path)
+					: ($key="com.apple.security.application-groups") & ($app.path#This:C1470.app.path)
+						
 					Else 
-						//TODO: string, array, dict...
+						
+						Case of 
+							: (Value type:C1509($entitlements[$key])=Is text:K8:3)
+								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
+								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "string"); $entitlements[$key])
+							: (Value type:C1509($entitlements[$key])=Is boolean:K8:9)
+								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
+								If (Bool:C1537($entitlements[$key]))
+									$value:=DOM Create XML element:C865($dict; "true")
+								Else 
+									$value:=DOM Create XML element:C865($dict; "false")
+								End if 
+							: (Value type:C1509($entitlements[$key])=Is collection:K8:32)
+								var $keyValues : Collection
+								DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
+								$array:=DOM Create XML element:C865($dict; "array")
+								$keyValues:=$entitlements[$key]
+								For each ($keyValue; $keyValues)
+									DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($array; "string"); $keyValue)
+								End for each 
+							Else 
+								//TODO: string, array, dict...
+						End case 
+						
 				End case 
+				
 			End for each 
 			
 			ON ERR CALL:C155("ON_PARSE_ERROR")
@@ -1253,12 +1363,12 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $entitlementsFile.parent.platformPath)
 			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-			LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($entitlementsFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
+			LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+This:C1470.escape_param($entitlementsFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
 			
 			$command:=$command+" --options=runtime --entitlements "+\
-				escape_param($entitlementsFile.path)+" --sign "+\
-				escape_param(This:C1470.signingIdentity)+" "+\
-				escape_param($app.fullName)
+				This:C1470.escape_param($entitlementsFile.path)+" --sign "+\
+				This:C1470.escape_param(This:C1470.signingIdentity)+" "+\
+				This:C1470.escape_param($app.fullName)
 			
 			$status.entitlements:=$entitlements
 			
@@ -1269,8 +1379,8 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 	SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $app.parent.platformPath)
 	SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
 	
-	CLEAR VARIABLE:C89($stdOut)
-	CLEAR VARIABLE:C89($stdErr)
+	//CLEAR VARIABLE($stdOut)
+	//CLEAR VARIABLE($stdErr)
 	
 	LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
 	
@@ -1317,13 +1427,13 @@ Function _lowercaseExecutableName($infoPlistFile : 4D:C1709.File; $keys : Object
 				
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+escape_param($infoPlistFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
+				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+This:C1470.escape_param($infoPlistFile.fullName); $stdIn; $stdOut; $stdErr; $pid)
 				
 				If (Not:C34(Bool:C1537($options.remove)))
 					//modification to info.plist makes the signature invalid
 					$command:="codesign --verbose --sign "+\
-						escape_param(This:C1470.signingIdentity)+" "+\
-						escape_param($infoPlistFile.fullName)
+						This:C1470.escape_param(This:C1470.signingIdentity)+" "+\
+						This:C1470.escape_param($infoPlistFile.fullName)
 					
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
@@ -1341,13 +1451,13 @@ Function _lowercaseExecutableName($infoPlistFile : 4D:C1709.File; $keys : Object
 		
 	End if 
 	
-Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $status : Object)->$this : cs:C1710.SignApp
+Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $status : Object; $isApp : Boolean)->$this : cs:C1710.SignApp
+	
+	var $stdIn; $stdOut; $stdErr : Blob
 	
 	$this:=This:C1470
 	
 	If (OB Instance of:C1731($infoPlistFile; 4D:C1709.File))
-		
-		var $stdIn; $stdOut; $stdErr : Blob
 		
 		$status.plist:=$infoPlistFile.platformPath
 		
@@ -1360,23 +1470,55 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 			C_TEXT:C284($dict)
 			$dict:=DOM Find XML element:C864($dom; "/plist/dict")
 			
+			C_TEXT:C284($originalIdentifier)
+			
 			ARRAY TEXT:C222($domKeys; 0)
 			$domKey:=DOM Find XML element:C864($dict; "key"; $domKeys)
 			//remove keys we want to write
 			For ($i; 1; Size of array:C274($domKeys))
 				$domKey:=$domKeys{$i}
 				DOM GET XML ELEMENT VALUE:C731($domKey; $keyName)
+				If ($keyName="CFBundleIdentifier")
+					DOM GET XML ELEMENT VALUE:C731(DOM Get next sibling XML element:C724($domKey); $originalIdentifier)
+				End if 
 				If ($keys[$keyName]#Null:C1517)
 					DOM REMOVE XML ELEMENT:C869(DOM Get next sibling XML element:C724($domKey))
 					DOM REMOVE XML ELEMENT:C869($domKey)
 				End if 
 			End for 
+			
+			C_TEXT:C284($applicationGroup)
+			ARRAY LONGINT:C221($pos; 0)
+			ARRAY LONGINT:C221($len; 0)
+			
+			If (Match regex:C1019("(?:[^(]+)\\(([A-Z0-9]+)\\)"; This:C1470.signingIdentity; 1; $pos; $len))
+				$applicationGroup:=Substring:C12(This:C1470.signingIdentity; $pos{1}; $len{1})
+			End if 
+			
+			If (Value type:C1509(This:C1470.entitlements["com.apple.security.application-groups"])=Is collection:K8:32)
+				If (This:C1470.entitlements["com.apple.security.application-groups"].length#0)
+					$applicationGroup:=This:C1470.entitlements["com.apple.security.application-groups"][0]
+				End if 
+			End if 
+			
 			//write keys
 			For each ($key; $keys)
 				Case of 
 					: (Value type:C1509($keys[$key])=Is text:K8:3)
+						If ($key="CFBundleIdentifier")
+							$stringValue:=$originalIdentifier
+							If (Not:C34($isApp))
+								If ($originalIdentifier#($applicationGroup+".@"))
+									$stringValue:=$applicationGroup+"."+$originalIdentifier
+								End if 
+							Else 
+								$stringValue:=$keys[$key]
+							End if 
+						Else 
+							$stringValue:=$keys[$key]
+						End if 
 						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
-						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "string"); $keys[$key])
+						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "string"); $stringValue)
 					: (Value type:C1509($keys[$key])=Is boolean:K8:9)
 						DOM SET XML ELEMENT VALUE:C868(DOM Create XML element:C865($dict; "key"); $key)
 						If (Bool:C1537($keys[$key]))
@@ -1407,18 +1549,18 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 				
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-				$command:="plutil -convert xml1 "+escape_param($infoPlistFile.fullName)
-				LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
+				
+				LAUNCH EXTERNAL PROCESS:C811("plutil -convert xml1 "+This:C1470.escape_param($infoPlistFile.fullName); $stdIn; $stdOut; $stdErr)
 				
 				If (Not:C34(Bool:C1537($options.remove)))
 					//modification to info.plist makes the signature invalid
 					$command:="codesign --verbose --sign "+\
-						escape_param(This:C1470.signingIdentity)+" "+\
-						escape_param($infoPlistFile.fullName)
+						This:C1470.escape_param(This:C1470.signingIdentity)+" "+\
+						This:C1470.escape_param($infoPlistFile.fullName)
 					
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $infoPlistFile.parent.platformPath)
 					SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-					LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
+					LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr)
 					
 					If (BLOB size:C605($stdErr)#0)
 						$status.codesign:=Convert to text:C1012($stdErr; "utf-8")
@@ -1491,7 +1633,7 @@ Function getXcodePath()->$Xcode : Object
 		//spotlight should be enabled for applications
 		
 		SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-		LAUNCH EXTERNAL PROCESS:C811("mdfind "+escape_param("kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"); $stdIn; $stdOut; $stdErr; $pid)
+		LAUNCH EXTERNAL PROCESS:C811("mdfind "+This:C1470.escape_param("kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"); $stdIn; $stdOut; $stdErr; $pid)
 		
 		$paths:=Convert to text:C1012($stdOut; "utf-8")
 		
@@ -1523,7 +1665,7 @@ Function listProviders()->$providers : Collection
 				C_LONGINT:C283($pid)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_CURRENT_DIRECTORY"; $iTMSTransporter.parent.platformPath)
 				SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
-				LAUNCH EXTERNAL PROCESS:C811("iTMSTransporter -m provider -u "+escape_param(This:C1470.username)+" -p "+escape_param(This:C1470.password); $stdIn; $stdOut; $stdErr; $pid)
+				LAUNCH EXTERNAL PROCESS:C811("iTMSTransporter -m provider -u "+This:C1470.escape_param(This:C1470.username)+" -p "+This:C1470.escape_param(This:C1470.password); $stdIn; $stdOut; $stdErr; $pid)
 				
 				$info:=Convert to text:C1012($stdOut; "utf-8")
 				

@@ -1,13 +1,16 @@
 Class constructor($settingsFile : Object)
 	
+	This:C1470.settingsFile:=Null:C1517
+	
 	Case of 
+		: (Count parameters:C259=0)
 		: (OB Instance of:C1731($settingsFile; 4D:C1709.File))  //use this 4DSettings file
 			This:C1470.settingsFile:=$settingsFile
-		: (OB Instance of:C1731($settingsFile; 4D:C1709.Object))  //force blank 4DSettings
-			This:C1470.settingsFile:=Null:C1517
-		Else   //use default 4DSettings file
-			This:C1470.settingsFile:=This:C1470.getDefaultSettingsFile()
 	End case 
+	
+	If (This:C1470.settingsFile=Null:C1517)
+		This:C1470.settingsFile:=This:C1470.getDefaultSettingsFile()  //use default 4DSettings file
+	End if 
 	
 	This:C1470.settings:=This:C1470._getSettings(This:C1470.settingsFile)
 	
@@ -802,3 +805,59 @@ MacCompiledDatabaseToWinIncludeIt
 		End if 
 		
 	End if 
+	
+Function buildComponent($name : Text)->$that : cs:C1710._Build
+	
+	$that:=This:C1470
+	
+	$databaseFolder:=Folder:C1567(Get 4D folder:C485(Database folder:K5:14; *); fk platform path:K87:2)
+	
+	If (Count parameters:C259=0)
+		$BuildApplicationName:=$databaseFolder.name
+	Else 
+		$BuildApplicationName:=$name
+	End if 
+	
+	$settings:=This:C1470.settings
+	
+	$settings.UseStandardZipFormat:=False:C215
+	
+	$settings.CS.BuildServerApplication:=False:C215
+	$settings.CS.BuildCSUpgradeable:=False:C215
+	$settings.CS.BuildV13ClientUpgrades:=False:C215
+	$settings.CS.MacCompiledDatabaseToWinIncludeIt:=False:C215
+	$settings.CS.ServerSelectionAllowed:=False:C215
+	
+	$settings.SourcesFiles.CS.ClientMacIncludeIt:=False:C215
+	$settings.SourcesFiles.CS.ClientWinIncludeIt:=False:C215
+	$settings.SourcesFiles.CS.ServerIncludeIt:=False:C215
+	$settings.SourcesFiles.CS.IsOEM:=False:C215
+	
+	$settings.SourcesFiles.RuntimeVLIncludeIt:=False:C215
+	$settings.SourcesFiles.RuntimeVL.IsOEM:=False:C215
+	
+	$settings.BuildComponent:=True:C214
+	$settings.BuildCompiled:=False:C215
+	$settings.BuildApplicationSerialized:=False:C215
+	$settings.BuildApplicationLight:=False:C215
+	$settings.BuildApplicationName:=$BuildApplicationName
+	$settings.BuildMacDestFolder:=$databaseFolder.parent.parent.platformPath
+	
+	$settings.SignApplication.MacSignature:=False:C215
+	$settings.SignApplication.AdHocSign:=False:C215
+	
+	$settings.PackProject:=True:C214
+	$settings.IncludeAssociatedFolders:=True:C214
+	
+	$status:=This:C1470.build()
+	
+Function getAppFolderForVersion()->$folder : 4D:C1709.Folder
+	
+	$version:=Application version:C493($build)
+	If (Substring:C12($version; 3; 1)="0")
+		$folderName:="4D v"+Substring:C12($version; 1; 2)+"."+Substring:C12($version; 4; 1)
+	Else 
+		$folderName:="4D v"+Substring:C12($version; 1; 2)+" R"+Substring:C12($version; 3; 1)
+	End if 
+	
+	$folder:=Folder:C1567(fk applications folder:K87:20).folder($folderName)
