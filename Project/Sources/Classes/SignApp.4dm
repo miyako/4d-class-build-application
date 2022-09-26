@@ -127,6 +127,7 @@ Function sign($app : 4D:C1709.Folder)->$statuses : Collection
 						End if 
 						
 						If (This:C1470.options.signUpdater)  //server only
+							This:C1470._signUpgrade4DClient($app; $statuses)
 							This:C1470._signUpdater($app; $statuses)
 						End if 
 						
@@ -581,6 +582,23 @@ Function _signComponents($app : 4D:C1709.Folder; $statuses : Collection)->$this 
 	var $folder : 4D:C1709.Folder
 	
 	$folder:=$app.folder("Contents").folder("Components")
+	
+	$extensions:=New collection:C1472(".html"; ".json"; ".js"; ".dylib")
+	
+	If ($folder.exists)
+		For each ($file; $folder.files(fk recursive:K87:7 | fk ignore invisible:K87:22).query("extension in :1"; $extensions))
+			$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+		End for each 
+	End if 
+	
+Function _signUpgrade4DClient($app : 4D:C1709.Folder; $statuses : Collection)->$this : cs:C1710.SignApp
+	
+	$this:=This:C1470
+	
+	var $file : 4D:C1709.File
+	var $folder : 4D:C1709.Folder
+	
+	$folder:=$app.folder("Contents").folder("Upgrade4DClient")
 	
 	$extensions:=New collection:C1472(".html"; ".json"; ".js"; ".dylib")
 	
