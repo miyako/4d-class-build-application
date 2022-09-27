@@ -11,4 +11,16 @@ Function escape_param($escape_param : Text)->$param : Text
 		$param:=Replace string:C233($param; $metacharacter; "\\"+$metacharacter; *)
 	End for 
 	
+Function encodeObject($object : Object)->$encodedObject : Text
 	
+	If ($object#Null:C1517)
+		
+		var $json : Text
+		$json:=JSON Stringify:C1217($object)
+		
+		var $data : Blob
+		CONVERT FROM TEXT:C1011($json; "utf-8"; $data)
+		
+		BASE64 ENCODE:C895($data; $encodedObject)
+		
+	End if 
