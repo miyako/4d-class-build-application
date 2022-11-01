@@ -216,16 +216,26 @@ v18
 	
 DatabaseToEmbedInClientMacFolder
 DatabaseToEmbedInClientWinFolder
+ClientWinSingleInstance*
 	
 v19
 	
 AdHocSign
+PackProject
+ServerStructureFolderName*
+ClientServerSystemFolderName*
 	
 v20
 	
 UseStandardZipFormat
 MacCompiledDatabaseToWin
 MacCompiledDatabaseToWinIncludeIt
+ClientUserPreferencesFolderByPath*
+HideDataExplorerMenuItem*
+HideRuntimeExplorerMenuItem*
+ServerEmbedsProjectDirectoryFile*
+ServerDataCollection*
+ShareLocalResourcesOnWindowsClient*
 	
 */
 	
@@ -267,6 +277,15 @@ MacCompiledDatabaseToWinIncludeIt
 		"CurrentVers"; 1; \
 		"LastDataPathLookup"; Null:C1517; \
 		"ServerSelectionAllowed"; False:C215; \
+		"ServerStructureFolderName"; Null:C1517; \
+		"ClientServerSystemFolderName"; Null:C1517; \
+		"ClientWinSingleInstance"; False:C215; \
+		"ServerEmbedsProjectDirectoryFile"; False:C215; \
+		"ServerDataCollection"; False:C215; \
+		"HideDataExplorerMenuItem"; False:C215; \
+		"HideRuntimeExplorerMenuItem"; False:C215; \
+		"ClientUserPreferencesFolderByPath"; False:C215; \
+		"ShareLocalResourcesOnWindowsClient"; False:C215; \
 		"MacCompiledDatabaseToWin"; Null:C1517; \
 		"MacCompiledDatabaseToWinIncludeIt"; False:C215)
 	

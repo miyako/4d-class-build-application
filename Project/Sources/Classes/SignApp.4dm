@@ -33,6 +33,7 @@ unused option:local (don't use timestamp server)
 		This:C1470.CONST.FORCE:=New object:C1471("force"; True:C214)
 		This:C1470.CONST.REMOVE:=New object:C1471("remove"; True:C214)
 		This:C1470.CONST.MECAB:=New object:C1471("force"; True:C214; "mecab"; True:C214)
+		This:C1470.CONST.UPDATER:=New object:C1471("force"; True:C214; "sandbox"; True:C214)
 		
 		This:C1470.CONST.WITH_HARDENED_RUNTIME:=True:C214
 		This:C1470.CONST.WITHOUT_HARDENED_RUNTIME:=False:C215
@@ -845,7 +846,7 @@ Function _signUpdater($app : 4D:C1709.Folder; $statuses : Collection)->$this : c
 	//sign with hardened runtime because this is an app
 	$folder:=$app.folder("Contents").folder("Resources").folder("Updater").folder("Updater.app")
 	If ($folder.exists)
-		$statuses.push(This:C1470.codesign($folder; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+		$statuses.push(This:C1470.codesign($folder; This:C1470.CONST.WITH_HARDENED_RUNTIME; This:C1470.CONST.UPDATER))
 	End if 
 	
 Function _signMobile($app : 4D:C1709.Folder; $statuses : Collection)->$this : cs:C1710.SignApp
@@ -914,6 +915,7 @@ Function _copyDefaultProperties()->$keys : Object
 	
 	//keys to always insert in Info.plist (UsageDescription) because they can not be added later
 	//https://developer.apple.com/documentation/bundleresources/information_property_list
+	
 	$keys:=New object:C1471
 	$keys.NSRequiresAquaSystemAppearance:="NO"
 	$keys.NSAppleEventsUsageDescription:=""
@@ -925,12 +927,6 @@ Function _copyDefaultProperties()->$keys : Object
 	$keys.NSLocationUsageDescription:=""
 	$keys.NSPhotoLibraryUsageDescription:=""
 	$keys.NSSystemAdministrationUsageDescription:=""
-	
-	$keys.NSDesktopFolderUsageDescription:=""  // optional, but highly recommended
-	$keys.NSDocumentsFolderUsageDescription:=""  // optional, but highly recommended
-	$keys.NSDownloadsFolderUsageDescription:=""  // optional, but highly recommended
-	$keys.NSRemovableVolumesUsageDescription:=""  // optional, but highly recommended
-	$keys.NSNetworkVolumesUsageDescription:=""  // optional, but highly recommended
 	
 Function _copyDefaultEntitlements()->$entitlements : Object
 	
@@ -1261,6 +1257,8 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 		$keys[$key]:=This:C1470.plist[$key]
 	End for each 
 	
+	This:C1470.isSandBox:=Bool:C1537($entitlements["com.apple.security.app-sandbox"])
+	
 	$entitlements:=This:C1470._copyDefaultEntitlements()
 	
 	If ($hardenedRuntime)
@@ -1268,8 +1266,6 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			$entitlements[$key]:=This:C1470.entitlements[$key]
 		End for each 
 	End if 
-	
-	This:C1470.isSandBox:=Bool:C1537($entitlements["com.apple.security.app-sandbox"])
 	
 	C_LONGINT:C283($i)
 	C_TEXT:C284($keyName)
@@ -1345,12 +1341,23 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 			DOM SET XML ATTRIBUTE:C866($dom; "version"; "1.0")
 			$dict:=DOM Create XML element:C865($dom; "dict")
 			
-			If (This:C1470.isSandBox)
-				If (This:C1470.app.path#$app.path)
-					$entitlements:=New object:C1471
-					$entitlements["com.apple.security.inherit"]:=True:C214
-					$entitlements["com.apple.security.app-sandbox"]:=True:C214
+			If (Bool:C1537($options.sandbox))
+				//can't be sandbox because the updater needs access to application
+				//$entitlements["com.apple.security.app-sandbox"]:=True
+				//$entitlements["com.apple.security.network.client"]:=True
+				//$entitlements["com.apple.security.network.server"]:=True
+				//$entitlements["com.apple.security.files.user-selected.read-write"]:=True
+				//$entitlements["com.apple.security.files.user-selected.executable"]:=True
+			Else 
+				
+				If (This:C1470.isSandBox)
+					If (This:C1470.app.path#$app.path)
+						$entitlements:=New object:C1471
+						$entitlements["com.apple.security.inherit"]:=True:C214
+						$entitlements["com.apple.security.app-sandbox"]:=True:C214
+					End if 
 				End if 
+				
 			End if 
 			
 			For each ($key; $entitlements)
@@ -1489,6 +1496,13 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 		
 		If (OK=1)
 			
+			$usageDescriptionKeys:=New collection:C1472(\
+				"NSDesktopFolderUsageDescription"; \
+				"NSDocumentsFolderUsageDescription"; \
+				"NSDownloadsFolderUsageDescription"; \
+				"NSRemovableVolumesUsageDescription"; \
+				"NSNetworkVolumesUsageDescription")
+			
 			C_TEXT:C284($dict)
 			$dict:=DOM Find XML element:C864($dom; "/plist/dict")
 			
@@ -1507,6 +1521,12 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 					DOM REMOVE XML ELEMENT:C869(DOM Get next sibling XML element:C724($domKey))
 					DOM REMOVE XML ELEMENT:C869($domKey)
 				End if 
+				
+				If ($usageDescriptionKeys.indexOf($keyName)#-1)
+					DOM REMOVE XML ELEMENT:C869(DOM Get next sibling XML element:C724($domKey))
+					DOM REMOVE XML ELEMENT:C869($domKey)
+				End if 
+				
 			End for 
 			
 			C_TEXT:C284($applicationGroup)
@@ -1534,9 +1554,11 @@ Function _updateProperties($infoPlistFile : 4D:C1709.File; $keys : Object; $stat
 							$stringValue:=$originalIdentifier
 							
 							If (Not:C34($isApp))
-								If (This:C1470.bundleIdentifier#Null:C1517)
-									If ($stringValue#(This:C1470.bundleIdentifier+"@"))
-										$stringValue:=This:C1470.bundleIdentifier+"."+$stringValue
+								If (This:C1470.isSandBox)
+									If (This:C1470.bundleIdentifier#Null:C1517)
+										If ($stringValue#(This:C1470.bundleIdentifier+"@"))
+											$stringValue:=This:C1470.bundleIdentifier+"."+$stringValue
+										End if 
 									End if 
 								End if 
 							Else 
