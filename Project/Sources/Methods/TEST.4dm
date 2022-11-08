@@ -20,7 +20,7 @@ End if
 $version:=Application version:C493($build)
 $folderName:="4D v"+Substring:C12($version; 1; 2)+"."+Substring:C12($version; 4; 1)
 
-//$folderName:="4D v19.4"
+$folderName:="4D v19.4"
 //$folderName:="4D v19 R5"
 
 $applicationsFolder:=Folder:C1567(fk applications folder:K87:20)
@@ -30,7 +30,7 @@ $app:=$applicationsFolder.folder($folderName).folder("4D Server.app")
 
 $statuses:=$signApp.sign($app)
 
-$status:=$signApp.archive($app)
+$status:=$signApp.archive($app; ".dmg")
 
 If ($status.success)
 	$status:=$signApp.notarize($status.file)
