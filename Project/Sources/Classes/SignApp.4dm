@@ -12,14 +12,16 @@ Class constructor($credentials : Object; $plist : Object)
 		This:C1470.teamId:=$credentials.teamId
 		This:C1470.keychainProfile:=$credentials.keychainProfile
 		
-		This:C1470.identity:=This:C1470.findIdentity()
-		If (This:C1470.identity.length#0)
-			
-			$identity:=This:C1470.identity.query("name == :1"; "Developer ID Application:@")
-			If ($identity.length#0)
-				This:C1470.signingIdentity:=$identity[0].name
+		If ($credentials.signingIdentity#Null:C1517)
+			This:C1470.signingIdentity:=$credentials.signingIdentity
+		Else 
+			This:C1470.identity:=This:C1470.findIdentity()
+			If (This:C1470.identity.length#0)
+				$identity:=This:C1470.identity.query("name == :1"; "Developer ID Application:@")
+				If ($identity.length#0)
+					This:C1470.signingIdentity:=$identity[0].name
+				End if 
 			End if 
-			
 		End if 
 		
 		This:C1470.destination:=Folder:C1567(Temporary folder:C486; fk platform path:K87:2)
@@ -999,10 +1001,15 @@ Function productsign($src : 4D:C1709.File; $dst : 4D:C1709.File)->$status : Obje
 	If (Is macOS:C1572)
 		
 		C_TEXT:C284($signingIdentity)
-		If (This:C1470.identity.length#0)
-			$identity:=This:C1470.identity.query("name == :1"; "Developer ID Installer:@")
-			If ($identity.length#0)
-				$signingIdentity:=$identity[0].name
+		
+		If (This:C1470.signingIdentity#Null:C1517)
+			$signingIdentity:=This:C1470.signingIdentity
+		Else 
+			If (This:C1470.identity.length#0)
+				$identity:=This:C1470.identity.query("name == :1"; "Developer ID Installer:@")
+				If ($identity.length#0)
+					$signingIdentity:=$identity[0].name
+				End if 
 			End if 
 		End if 
 		
