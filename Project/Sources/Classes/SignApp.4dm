@@ -268,13 +268,27 @@ Function _staple($file : 4D:C1709.File)->$status : Object
 		$status.staple:=Split string:C1554($status.staple; "\n"; sk ignore empty strings:K86:1 | sk trim spaces:K86:2)
 	End if 
 	
+Function _notarytool_path()->$command : Text
+	
+	$command:="xcrun notarytool"
+	
+	$osVersion:=Get system info:C1571.osVersion
+	If ($osVersion="@10.15.@")
+		var $stdIn; $stdOut; $stdErr : Blob
+		LAUNCH EXTERNAL PROCESS:C811("xcrun -f notarytool"; $stdIn; $stdOut; $stdErr)
+		$paths:=Split string:C1554(Convert to text:C1012($stdOut; "utf-8"); "\n"; sk ignore empty strings:K86:1 | sk trim spaces:K86:2)
+		If ($paths.length#0)
+			$command:=$paths[0]
+		End if 
+	End if 
+	
 Function _notarytool($params : Object)->$status : Object
 	
 	$status:=New object:C1471("success"; False:C215)
 	
 	If (OB Instance of:C1731($params.file; 4D:C1709.File))
 		
-		$command:="xcrun notarytool submit "+This:C1470.escape_param($params.file.path)
+		$command:=This:C1470._notarytool_path()+" submit "+This:C1470.escape_param($params.file.path)
 		
 		Case of 
 			: (This:C1470.keychainProfile#Null:C1517)
