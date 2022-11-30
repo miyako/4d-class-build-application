@@ -1,7 +1,4 @@
-
-compiler/compiler/userPreferences.*
-userPreferences.*
+**/userPreferences.*
 Project/DerivedData/*
 Data/*
-*.DS_Store
-Data/*
+**.DS_Store
