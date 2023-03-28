@@ -83,15 +83,6 @@ unused option:local (don't use timestamp server)
 		This:C1470.options.removeComponentPlugins:=True:C214
 		This:C1470.options.removeCEF:=False:C215
 		
-/*
-		
-not implemented
-		
-remove mecab
-remove CEF
-		
-*/
-		
 		This:C1470.setXcodePath()
 		
 	End if 
@@ -1278,7 +1269,7 @@ Function codesign($app : Object; $hardenedRuntime : Boolean; $options : Object)-
 		$keys[$key]:=This:C1470.plist[$key]
 	End for each 
 	
-	This:C1470.isSandBox:=Bool:C1537($entitlements["com.apple.security.app-sandbox"])
+	This:C1470.isSandBox:=Bool:C1537(This:C1470.entitlements["com.apple.security.app-sandbox"])
 	
 	$entitlements:=This:C1470._copyDefaultEntitlements()
 	
