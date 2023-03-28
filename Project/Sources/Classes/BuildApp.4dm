@@ -825,7 +825,7 @@ ShareLocalResourcesOnWindowsClient*
 		
 	End if 
 	
-Function buildComponent($name : Text)->$that : cs:C1710._Build
+Function buildComponent($name : Text)->$that : cs:C1710.BuildApp
 	
 	$that:=This:C1470
 	
