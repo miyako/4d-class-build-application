@@ -1006,7 +1006,7 @@ Function install_name_tool($src : Object; $from : Text; $to : Text; $statuses : 
 		
 	End if 
 	
-Function productsign($src : 4D:C1709.File; $dst : 4D:C1709.File)->$status : Object
+Function productsign($src : 4D:C1709.File; $dst : 4D:C1709.Folder)->$status : Object
 	
 	$this:=This:C1470
 	
