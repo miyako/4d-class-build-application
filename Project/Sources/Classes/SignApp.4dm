@@ -1056,7 +1056,7 @@ Function productsign($src : 4D:C1709.File; $dst : 4D:C1709.Folder)->$status : Ob
 		
 	End if 
 	
-Function pkgbuild($src : Object; $dst : 4D:C1709.File)->$status : Object
+Function pkgbuild($src : Object; $dst : Object)->$status : Object
 	
 	$this:=This:C1470
 	
@@ -1134,7 +1134,7 @@ Function pkgbuild($src : Object; $dst : 4D:C1709.File)->$status : Object
 		End if 
 	End if 
 	
-Function hdiutil($src : Object; $dst : 4D:C1709.File)->$status : Object
+Function hdiutil($src : Object; $dst : Object)->$status : Object
 	
 	$this:=This:C1470
 	
@@ -1197,7 +1197,7 @@ Function hdiutil($src : Object; $dst : 4D:C1709.File)->$status : Object
 		End if 
 	End if 
 	
-Function ditto($src : Object; $dst : 4D:C1709.File; $noParentFolder : Boolean)->$status : Object
+Function ditto($src : Object; $dst : Object; $noParentFolder : Boolean)->$status : Object
 	
 	$this:=This:C1470
 	
