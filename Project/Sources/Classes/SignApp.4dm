@@ -78,10 +78,15 @@ unused option:local (don't use timestamp server)
 		
 		This:C1470.options.deleteTempFiles:=True:C214
 		This:C1470.options.cleanFirst:=True:C214
+/*
+deprecated; this should now be done during build, not sign
+see ArrayExcludedModuleName
+*/
 		This:C1470.options.removePHP:=False:C215
+		This:C1470.options.removeCEF:=False:C215
+		
 		This:C1470.options.movePluginManifest:=False:C215
 		This:C1470.options.removeComponentPlugins:=True:C214
-		This:C1470.options.removeCEF:=False:C215
 		
 		This:C1470.setXcodePath()
 		

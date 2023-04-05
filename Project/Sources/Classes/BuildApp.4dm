@@ -216,26 +216,27 @@ v18
 	
 DatabaseToEmbedInClientMacFolder
 DatabaseToEmbedInClientWinFolder
-ClientWinSingleInstance*
+ClientWinSingleInstance
 	
 v19
 	
 AdHocSign
 PackProject
-ServerStructureFolderName*
-ClientServerSystemFolderName*
+ServerStructureFolderName
+ClientServerSystemFolderName
 	
 v20
 	
+ArrayExcludedModuleName	
 UseStandardZipFormat
 MacCompiledDatabaseToWin
 MacCompiledDatabaseToWinIncludeIt
-ClientUserPreferencesFolderByPath*
-HideDataExplorerMenuItem*
-HideRuntimeExplorerMenuItem*
-ServerEmbedsProjectDirectoryFile*
-ServerDataCollection*
-ShareLocalResourcesOnWindowsClient*
+ClientUserPreferencesFolderByPath
+HideDataExplorerMenuItem
+HideRuntimeExplorerMenuItem
+ServerEmbedsProjectDirectoryFile
+ServerDataCollection
+ShareLocalResourcesOnWindowsClient
 	
 */
 	
@@ -254,6 +255,7 @@ ShareLocalResourcesOnWindowsClient*
 		"ArrayExcludedPluginName"; New object:C1471("ItemsCount"; Formula:C1597(This:C1470.Item.length); "Item"; New collection:C1472); \
 		"ArrayExcludedPluginID"; New object:C1471("ItemsCount"; Formula:C1597(This:C1470.Item.length); "Item"; New collection:C1472); \
 		"ArrayExcludedComponentName"; New object:C1471("ItemsCount"; Formula:C1597(This:C1470.Item.length); "Item"; New collection:C1472); \
+		"ArrayExcludedModuleName"; New object:C1471("ItemsCount"; Formula:C1597(This:C1470.Item.length); "Item"; New collection:C1472); \
 		"UseStandardZipFormat"; False:C215; \
 		"PackProject"; True:C214)
 	
@@ -278,6 +280,7 @@ ShareLocalResourcesOnWindowsClient*
 		"LastDataPathLookup"; Null:C1517; \
 		"ServerSelectionAllowed"; False:C215; \
 		"ServerStructureFolderName"; Null:C1517; \
+		"ClientWinSingleInstance"; True:C214; \
 		"ClientServerSystemFolderName"; Null:C1517; \
 		"ClientWinSingleInstance"; False:C215; \
 		"ServerEmbedsProjectDirectoryFile"; False:C215; \
