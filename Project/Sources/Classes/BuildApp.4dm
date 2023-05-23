@@ -237,6 +237,7 @@ HideRuntimeExplorerMenuItem
 ServerEmbedsProjectDirectoryFile
 ServerDataCollection
 ShareLocalResourcesOnWindowsClient
+HideAdministrationMenuItem
 	
 */
 	
@@ -290,7 +291,8 @@ ShareLocalResourcesOnWindowsClient
 		"ClientUserPreferencesFolderByPath"; False:C215; \
 		"ShareLocalResourcesOnWindowsClient"; False:C215; \
 		"MacCompiledDatabaseToWin"; Null:C1517; \
-		"MacCompiledDatabaseToWinIncludeIt"; False:C215)
+		"MacCompiledDatabaseToWinIncludeIt"; False:C215; \
+		"HideAdministrationMenuItem"; False:C215)
 	
 	$BuildApp.Licenses:=New object:C1471(\
 		"ArrayLicenseWin"; New object:C1471("ItemsCount"; Formula:C1597(This:C1470.Item.length); "Item"; New collection:C1472); \
