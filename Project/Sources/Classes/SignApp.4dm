@@ -433,7 +433,51 @@ Function _altool($params : Object)->$status : Object
 	
 Function notarizationInfo($RequestUUID : Text)->$status : Object
 	
-	$status:=This:C1470._altool(New object:C1471("RequestUUID"; $RequestUUID))
+	If ($use_altool)
+		$status:=This:C1470._altool(New object:C1471("RequestUUID"; $RequestUUID))
+	Else 
+		
+		$status:=New object:C1471("success"; False:C215)
+		
+		$command:=This:C1470._notarytool_path()+" log "
+		
+		Case of 
+			: (This:C1470.keychainProfile#Null:C1517)
+				$command:=$command+" --keychain-profile "+This:C1470.keychainProfile
+			: (This:C1470.username#Null:C1517) & (This:C1470.teamId#Null:C1517) & (This:C1470.password#Null:C1517)
+				$command:=$command+" --apple-id \""+This:C1470.username+"\""+" --team-id "+This:C1470.teamId+" --password "+This:C1470.password
+			Else 
+				$command:=""
+		End case 
+		
+		If ($command#"")
+			
+			$command:=$command+" "+$RequestUUID
+			
+			var $stdIn; $stdOut; $stdErr : Blob
+			var $pid : Integer
+			
+			SET ENVIRONMENT VARIABLE:C812("_4D_OPTION_BLOCKING_EXTERNAL_PROCESS"; "TRUE")
+			LAUNCH EXTERNAL PROCESS:C811($command; $stdIn; $stdOut; $stdErr; $pid)
+			
+			C_TEXT:C284($info)
+			
+			If (BLOB size:C605($stdErr)#0)
+				$info:=Convert to text:C1012($stdErr; "utf-8")
+				$status.info:=Split string:C1554($info; "\n"; sk trim spaces:K86:2 | sk ignore empty strings:K86:1)
+			End if 
+			
+			If (BLOB size:C605($stdOut)#0)
+				$info:=Convert to text:C1012($stdOut; "utf-8")
+				$status.info:=JSON Parse:C1218($info; Is object:K8:27)
+				If ($status.info.status="Accepted")
+					$status.success:=True:C214
+				End if 
+			End if 
+			
+		End if 
+		
+	End if 
 	
 Function archive($app : 4D:C1709.Folder; $format : Text)->$status : Object
 	
