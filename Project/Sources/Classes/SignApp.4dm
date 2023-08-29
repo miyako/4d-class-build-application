@@ -895,7 +895,9 @@ Function _signUpdater($app : 4D:C1709.Folder; $statuses : Collection)->$this : c
 	
 	If ($folder.exists)
 		For each ($file; $folder.files(fk recursive:K87:7 | fk ignore invisible:K87:22))
-			$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+			If (Not:C34($file.isAlias))
+				$statuses.push(This:C1470.codesign($file; This:C1470.CONST.WITHOUT_HARDENED_RUNTIME; This:C1470.CONST.FORCE))
+			End if 
 		End for each 
 	End if 
 	
