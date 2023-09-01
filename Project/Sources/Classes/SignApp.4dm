@@ -212,6 +212,8 @@ Function notarize($file : 4D:C1709.File; $useOldTool : Boolean)->$status : Objec
 				
 				If ($status.success)
 					
+					$RequestUUID:=$status.RequestUUID
+					
 					If ($use_altool)
 						Repeat 
 							$status:=This:C1470._altool(New object:C1471("RequestUUID"; $status.RequestUUID))
@@ -239,6 +241,8 @@ Function notarize($file : 4D:C1709.File; $useOldTool : Boolean)->$status : Objec
 						$status:=This:C1470._staple($file)
 						$status.readyForPublication:=$status.success
 					End if 
+					
+					$status.RequestUUID:=$RequestUUID
 					
 				End if 
 			End if 
@@ -316,6 +320,15 @@ Function _notarytool($params : Object)->$status : Object
 			End if 
 			
 			If ($status.info.length#0)
+				
+				For each ($line; $status.info)
+					ARRAY LONGINT:C221($pos; 0)
+					ARRAY LONGINT:C221($len; 0)
+					If (Match regex:C1019("id:\\s+([a-z0-9-]+)"; $line; 1; $pos; $len))
+						$status.RequestUUID:=Substring:C12($line; $pos{1}; $len{1})
+					End if 
+				End for each 
+				
 				$statusCode:=$status.info.pop()
 				If ($statusCode="status: Accepted")
 					$status.success:=True:C214
