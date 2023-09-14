@@ -1,0 +1,12 @@
+//%attributes = {}
+$BuildApp:=cs:C1710.BuildApp.new()
+$BuildApp.settings.Versioning.Common.CommonComment:="Comment"
+$BuildApp.settings.Versioning.Common.CommonCompanyName:="CompanyName"
+$BuildApp.settings.Versioning.Common.CommonCopyright:="Copyright"
+$BuildApp.settings.Versioning.Common.CommonCreator:="Creator"
+$BuildApp.settings.Versioning.Common.CommonFileDescription:="FileDescription"
+$BuildApp.settings.Versioning.Common.CommonInternalName:="InternalName"
+$BuildApp.settings.Versioning.Common.CommonLegalTrademark:="LegalTrademark"
+$BuildApp.settings.Versioning.Common.CommonPrivateBuild:="PrivateBuild"
+$BuildApp.settings.Versioning.Common.CommonSpecialBuild:="SpecialBuild"
+$BuildApp.settings.SourcesFiles.RuntimeVL.RuntimeVLWinFolder:=""
