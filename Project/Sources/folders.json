@@ -1,9 +1,7 @@
 {
 	"private": {
 		"methods": [
-			"BuildApp",
-			"ON_PARSE_ERROR",
-			"SignApp"
+			"ON_PARSE_ERROR"
 		],
 		"classes": [
 			"_App"
