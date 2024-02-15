@@ -5,6 +5,8 @@
 # 4d-class-build-application
 Classes to build, sign, archive, notarise and staple an app.
 
+**Note**: there is a [newer version for v20](https://github.com/miyako/4d-class-compiler).
+
 * [BuildApp](https://github.com/miyako/4d-class-build-application/blob/main/Project/Sources/Classes/BuildApp.4dm)
 * [SignApp](https://github.com/miyako/4d-class-build-application/blob/main/Project/Sources/Classes/SignApp.4dm)
 
