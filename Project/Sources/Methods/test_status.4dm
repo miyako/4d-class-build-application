@@ -11,4 +11,4 @@ Else   //otherwise
 End if 
 
 $signApp:=cs:C1710.SignApp.new($credentials)
-$status:=$signApp.notarizationInfo("{notarisation id}")
+$status:=$signApp.notarizationInfo("1a455e0a-cf66-40ed-b711-aa16f7398d62")

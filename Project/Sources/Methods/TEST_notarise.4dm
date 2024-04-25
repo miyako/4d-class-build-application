@@ -1,6 +1,6 @@
 //%attributes = {}
 $credentials:=New object:C1471
-$credentials.signingIdentity:="Developer ID Application: {name} ({team id})"  //your apple certificate
+$credentials.signingIdentity:="Developer ID Application: keisuke miyako (Y69CWUC25B)"  //your apple certificate
 
 If (True:C214)  //if you used `xcrun notarytool store-credentials` to store apple-id, team-id, password in keychain
 	$credentials.keychainProfile:="notarytool"
@@ -17,7 +17,7 @@ Else
 	$signApp:=cs:C1710.SignApp.new($credentials)
 End if 
 
-$app:=Folder:C1567("{drop app here}"; fk platform path:K87:2)
+$app:=Folder:C1567("Macintosh HD:Applications:4D v19.7:4D Server.app:"; fk platform path:K87:2)
 
 $statuses:=$signApp.sign($app)
 

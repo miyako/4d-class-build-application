@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE base SYSTEM "http://www.4d.com/dtd/2007/base.dtd" >
-<base name="compiler" uuid="327B87ECB93D4B5C8491B7881607753E" collation_locale="ja">
+<base name="notarytool" uuid="327B87ECB93D4B5C8491B7881607753E" collation_locale="ja">
 	<schema name="DEFAULT_SCHEMA"/>
+	<table name="Table_1" uuid="63F7788C8C6B4201872C0A20BCCA6471" id="1">
+		<field name="Id" uuid="FC955027382445E8A4AF735BE1EFED4A" type="4" unique="true" autosequence="true" not_null="true" id="1"/>
+		<primary_key field_name="Id" field_uuid="FC955027382445E8A4AF735BE1EFED4A"/>
+		<table_extra>
+			<editor_table_info fields_ordering="1" displayable_fields_count="6">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="83.05859375" top="24.71484375" width="120" height="167.33203125"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<index kind="regular" unique_keys="true" uuid="73F52B5BEB0A464C9B6465100064D84B" type="7">
+		<field_ref uuid="FC955027382445E8A4AF735BE1EFED4A" name="Id">
+			<table_ref uuid="63F7788C8C6B4201872C0A20BCCA6471" name="Table_1"/>
+		</field_ref>
+	</index>
+	<base_extra __stringCompHash="icu:68.1.0, alternate=search" __keywordBuildingHash="mecab:0.996;sys.dic:102;"/>
 </base>
