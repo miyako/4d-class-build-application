@@ -17,7 +17,7 @@ Else
 	$signApp:=cs:C1710.SignApp.new($credentials)
 End if 
 
-$app:=Folder:C1567("Macintosh HD:Applications:4D v19.7:4D Server.app:"; fk platform path:K87:2)
+$app:=Folder:C1567("Macintosh HD:Applications:4D 20.4:101436:4D Server.app:"; fk platform path:K87:2)
 
 $statuses:=$signApp.sign($app)
 
