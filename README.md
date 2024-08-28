@@ -1,6 +1,7 @@
 ![version](https://img.shields.io/badge/version-19%2B-5682DF)
 [![license](https://img.shields.io/github/license/miyako/4d-class-build-application
 )](LICENSE)
+![deprecated](https://img.shields.io/badge/-deprecated-inactive)
 
 # 4d-class-build-application
 Classes to build, sign, archive, notarise and staple an app.
